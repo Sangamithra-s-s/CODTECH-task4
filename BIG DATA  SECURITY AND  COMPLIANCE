@@ -1,0 +1,53 @@
+Data Encryption with PyCryptodome
+
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+import base64
+
+# Encrypt data
+def encrypt_data(data, key):
+    cipher = AES.new(key, AES.MODE_EAX)
+    ciphertext, tag = cipher.encrypt_and_digest(data.encode('utf-8'))
+    return base64.b64encode(cipher.nonce + tag + ciphertext).decode('utf-8')
+
+# Decrypt data
+def decrypt_data(encoded_data, key):
+    data = base64.b64decode(encoded_data)
+    nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+    return cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+
+# Example usage
+key = get_random_bytes(16)
+data = "Sensitive data"
+encrypted_data = encrypt_data(data, key)
+decrypted_data = decrypt_data(encrypted_data, key)
+
+print("Encrypted Data:", encrypted_data)
+print("Decrypted Data:", decrypted_data)
+
+Role-Based Access Control (RBAC)
+
+class User:
+    def __init__(self, username, role):
+        self.username = username
+        self.role = role
+
+class AccessControl:
+    def __init__(self):
+        self.permissions = {
+            "admin": ["read", "write", "delete"],
+            "user": ["read", "write"],
+            "guest": ["read"]
+        }
+
+    def has_permission(self, user, action):
+        return action in self.permissions.get(user.role, [])
+
+# Example usage
+admin = User("admin_user", "admin")
+guest = User("guest_user", "guest")
+ac = AccessControl()
+
+print("Admin has write permission:", ac.has_permission(admin, "write"))
+print("Guest has delete permission:", ac.has_permission(guest, "delete"))
